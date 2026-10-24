@@ -951,6 +951,14 @@ def setup_env(override: bool = False):
         logger.warning("Failed to read raw .env values from %s: %s", env_path, exc)
         return
 
+    # 代理类配置始终以 .env 为准：宿主环境里可能存在失效代理（例如 127.0.0.1:1608），
+    # 一旦它优先于 .env，会造成行情源（东财/Yahoo）全部不可达且难以排查。
+    for _proxy_key in ("HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"):
+        _proxy_value = (raw_env_values.get(_proxy_key) or "").strip()
+        if _proxy_value:
+            os.environ[_proxy_key] = _proxy_value
+            os.environ[_proxy_key.lower()] = _proxy_value
+
     key = "CUSTOM_WEBHOOK_BODY_TEMPLATE"
     if key in raw_env_values and (
         override or key not in preexisting_compose_sensitive_keys
@@ -1522,6 +1530,20 @@ class Config:
                 'localhost',
                 '127.0.0.1'
             ]
+
+            # 默认把东财当作“国内直连”域名排除在代理之外；但部分网络环境下东财直连被阻断、
+            # 只有走代理才通，此时用 EASTMONEY_VIA_PROXY=true 把它移出 NO_PROXY。
+            if os.getenv('EASTMONEY_VIA_PROXY', '').strip().lower() in ('1', 'true', 'yes', 'on'):
+                domestic_domains = [d for d in domestic_domains if 'eastmoney' not in d]
+            # 额外需要走代理（从 NO_PROXY 中剔除）的域名，逗号分隔
+            _extra_bypass = [
+                d.strip() for d in (os.getenv('PROXY_BYPASS_DOMAINS') or '').split(',') if d.strip()
+            ]
+            if _extra_bypass:
+                domestic_domains = [
+                    d for d in domestic_domains
+                    if not any(d == item or d.endswith('.' + item) for item in _extra_bypass)
+                ]
 
             # 获取现有的 no_proxy
             current_no_proxy = os.getenv('NO_PROXY') or os.getenv('no_proxy') or ''

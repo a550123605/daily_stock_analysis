@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import threading
 import time
@@ -296,6 +297,95 @@ class DailyMarketContextService:
                     or None
                 ),
                 created_at=getattr(record, "created_at", None),
+                history_id=getattr(record, "id", None),
+                query_id=getattr(record, "query_id", None),
+            )
+            if context is not None:
+                return context
+
+        # ---- 跨查询复用：同一时段内已生成的大盘复盘不再重复生成 ----
+        reuse_context = self._load_cross_query_reuse(
+            records=records,
+            region=region,
+            target_date=target_date,
+            report_language=report_language,
+        )
+        if reuse_context is not None:
+            logger.info(
+                "[大盘复用] 命中已有大盘复盘，跳过重复生成 region=%s target_date=%s",
+                region,
+                target_date,
+            )
+            return reuse_context
+        return None
+
+    def _load_cross_query_reuse(
+        self,
+        *,
+        records: Any,
+        region: str,
+        target_date: date,
+        report_language: str,
+    ) -> Optional[DailyMarketContext]:
+        """复用“同一交易时段内”已生成的大盘复盘，不要求 query_id 一致。
+
+        背景：每触发一次个股分析都会生成新的 query_id，默认逻辑下历史大盘复盘
+        因 query_id 不匹配而无法复用，导致每只股票都重跑一次大盘复盘
+        （约 5k tokens、2~3 分钟）。此处按“创建时间落在复用窗口内 + 交易日不晚于
+        目标日”放行，窗口由 MARKET_CONTEXT_REUSE_MINUTES 控制，设为 0 即关闭。
+        """
+        try:
+            ttl_minutes = int(float(os.getenv("MARKET_CONTEXT_REUSE_MINUTES", "240")))
+        except (TypeError, ValueError):
+            ttl_minutes = 240
+        if ttl_minutes <= 0:
+            return None
+
+        now = datetime.now()
+        for record in records or []:
+            if getattr(record, "report_type", None) != MARKET_REVIEW_REPORT_TYPE:
+                continue
+            snapshot = _loads_mapping(getattr(record, "context_snapshot", None))
+            payload = snapshot.get("market_review_payload")
+            if not isinstance(payload, Mapping):
+                payload = _payload_from_raw_record(record)
+            if not self._record_supports_region(
+                payload, snapshot.get("market_review_region"), region
+            ):
+                continue
+            if not _record_report_language_matches(record, report_language):
+                continue
+
+            created_at = getattr(record, "created_at", None)
+            created_dt = _coerce_datetime(created_at)
+            if created_dt is None:
+                continue
+            age_minutes = (now - created_dt).total_seconds() / 60.0
+            if age_minutes < -5 or age_minutes > ttl_minutes:
+                continue
+
+            payload_date = _payload_trade_date(payload, region)
+            # 允许“复盘交易日”与“本次分析目标日”存在偏差：周末/节假日时复盘按当日生成，
+            # 而个股分析用的是上一交易日，两者会差 1~2 天，不能因此判定为不可复用；
+            # 只有明显过期（超过 7 天）的记录才丢弃。
+            if payload_date is not None and (target_date - payload_date).days > 7:
+                continue
+
+            context = self._build_context_from_payload(
+                region=region,
+                trade_date=payload_date or target_date,
+                payload=payload if isinstance(payload, Mapping) else {},
+                source="analysis_history",
+                fallback_summary=(
+                    getattr(record, "analysis_summary", None)
+                    or getattr(record, "news_content", None)
+                ),
+                fallback_full_report=(
+                    getattr(record, "news_content", None)
+                    or getattr(record, "analysis_summary", None)
+                    or None
+                ),
+                created_at=created_at,
                 history_id=getattr(record, "id", None),
                 query_id=getattr(record, "query_id", None),
             )
@@ -779,6 +869,19 @@ def _coerce_date(value: Any) -> Optional[date]:
     if isinstance(value, str) and value.strip():
         try:
             return datetime.fromisoformat(value.strip()).date()
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime(value.year, value.month, value.day)
+    if isinstance(value, str) and value.strip():
+        try:
+            return datetime.fromisoformat(value.strip())
         except ValueError:
             return None
     return None

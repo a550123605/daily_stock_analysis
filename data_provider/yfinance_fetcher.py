@@ -128,6 +128,11 @@ class YfinanceFetcher(BaseFetcher):
 
         # 美股：1-5 个大写字母（可选 .X 后缀），原样返回
         if is_us_stock_code(code):
+            # Yahoo Finance 用连字符表示股票类别（BRK.B -> BRK-B），直接传点号会 404
+            if '.' in code:
+                yf_code = code.replace('.', '-')
+                logger.debug(f"识别为美股代码: {code} -> {yf_code}")
+                return yf_code
             logger.debug(f"识别为美股代码: {code}")
             return code
 

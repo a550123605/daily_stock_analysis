@@ -41,3 +41,7 @@ Makefile text eol=lf
 *.crt binary
 *.key binary
 *.p12 binary
+
+# Windows 批处理必须是 CRLF，否则 cmd.exe 解析错位（UTF-8/LF 会导致整行被拆碎）
+*.bat text eol=crlf
+*.cmd text eol=crlf

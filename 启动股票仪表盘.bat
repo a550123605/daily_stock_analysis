@@ -1,20 +1,20 @@
 @echo off
-chcp 936 >nul
-title ¹ÉÆ±·ÖÎöÒÇ±íÅÌ - http://127.0.0.1:8000
+chcp 65001 >nul
+title è‚¡ç¥¨åˆ†æžä»ªè¡¨ç›˜ - http://127.0.0.1:8000
 cd /d "%~dp0daily_stock_analysis"
 if errorlevel 1 (
-    echo [´íÎó] ÎÞ·¨½øÈë daily_stock_analysis Ä¿Â¼
+    echo [é”™è¯¯] æ— æ³•è¿›å…¥ daily_stock_analysis ç›®å½•
     pause
     exit /b 1
 )
 if not exist "%~dp0dsa-env\Scripts\python.exe" (
-    echo [´íÎó] Î´ÕÒµ½ÐéÄâ»·¾³: %~dp0dsa-env
-    echo ÇëÏÈÖ´ÐÐ: python -m venv dsa-env
+    echo [é”™è¯¯] æœªæ‰¾åˆ°è™šæ‹ŸçŽ¯å¢ƒ: %~dp0dsa-env
+    echo è¯·å…ˆæ‰§è¡Œ: python -m venv dsa-env
     pause
     exit /b 1
 )
 
-rem ´úÀí: A¹É×ßÖ±Á¬(ÌÚÑ¶), ÃÀ¹É×ß´úÀí; ´úÀíÃ»¿ªÊ±A¹ÉÕÕ³£, ÃÀ¹É»áÊ§°Ü
+rem ä»£ç†: Aè‚¡èµ°ç›´è¿ž(è…¾è®¯), ç¾Žè‚¡èµ°ä»£ç†; ä»£ç†æ²¡å¼€æ—¶Aè‚¡ç…§å¸¸, ç¾Žè‚¡ä¼šå¤±è´¥
 set "HTTP_PROXY=http://127.0.0.1:15732"
 set "HTTPS_PROXY=http://127.0.0.1:15732"
 set "NO_PROXY=localhost,127.0.0.1,qt.gtimg.cn,web.ifzq.gtimg.cn,hq.sinajs.cn,money.finance.sina.com.cn,baostock.com,api.tushare.pro"
@@ -22,15 +22,15 @@ set "NO_PROXY=localhost,127.0.0.1,qt.gtimg.cn,web.ifzq.gtimg.cn,hq.sinajs.cn,mon
 start "" /min cmd /c "timeout /t 15 >nul & start http://127.0.0.1:8000"
 
 echo ==================================================
-echo   ÒÇ±íÅÌ : http://127.0.0.1:8000
-echo   ±êµÄ   : 10 Ö» A¹É/ETF + KO BRK.B VOO QQQM
-echo   ¶¨Ê±   : Ã¿¸ö½»Ò×ÈÕ 18:00 ×Ô¶¯·ÖÎö
-echo   Í£Ö¹   : ¹Ø±Õ±¾´°¿Ú »ò °´ Ctrl+C
+echo   ä»ªè¡¨ç›˜ : http://127.0.0.1:8000
+echo   æ ‡çš„   : 10 åª Aè‚¡/ETF + KO BRK.B VOO QQQM
+echo   å®šæ—¶   : æ¯ä¸ªäº¤æ˜“æ—¥ 18:00 è‡ªåŠ¨åˆ†æž
+echo   åœæ­¢   : å…³é—­æœ¬çª—å£ æˆ– æŒ‰ Ctrl+C
 echo ==================================================
 echo.
 
 "%~dp0dsa-env\Scripts\python.exe" main.py --serve
 
 echo.
-echo ·þÎñÒÑÍË³ö¡£ÈôÊÇÒì³£ÍË³ö, Çë°ÑÉÏÃæµÄ±¨´í·¢³öÀ´¡£
+echo æœåŠ¡å·²é€€å‡ºã€‚è‹¥æ˜¯å¼‚å¸¸é€€å‡º, è¯·æŠŠä¸Šé¢çš„æŠ¥é”™å‘å‡ºæ¥ã€‚
 pause

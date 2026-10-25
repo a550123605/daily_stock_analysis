@@ -1,26 +1,26 @@
 @echo off
-chcp 936 >nul
-title Ô¤ÈÈ´óÅÌ¸´ÅÌ
+chcp 65001 >nul
+title é¢„çƒ­å¤§ç›˜å¤ç›˜
 cd /d "%~dp0daily_stock_analysis"
 if errorlevel 1 (
-    echo [´íÎó] ÎŞ·¨½øÈë daily_stock_analysis Ä¿Â¼
+    echo [é”™è¯¯] æ— æ³•è¿›å…¥ daily_stock_analysis ç›®å½•
     pause
     exit /b 1
 )
 if not exist "%~dp0dsa-env\Scripts\python.exe" (
-    echo [´íÎó] Î´ÕÒµ½ĞéÄâ»·¾³: %~dp0dsa-env
+    echo [é”™è¯¯] æœªæ‰¾åˆ°è™šæ‹Ÿç¯å¢ƒ: %~dp0dsa-env
     pause
     exit /b 1
 )
 
-rem ÏÈÉú³ÉÒ»·İ´óÅÌ¸´ÅÌ²¢Èë¿â, Ö®ºó 4 Ğ¡Ê±ÄÚËùÓĞ¸ö¹É·ÖÎöÖ±½Ó¸´ÓÃ
+rem å…ˆç”Ÿæˆä¸€ä»½å¤§ç›˜å¤ç›˜å¹¶å…¥åº“, ä¹‹å 4 å°æ—¶å†…æ‰€æœ‰ä¸ªè‚¡åˆ†æç›´æ¥å¤ç”¨
 set "HTTP_PROXY=http://127.0.0.1:15732"
 set "HTTPS_PROXY=http://127.0.0.1:15732"
 set "NO_PROXY=localhost,127.0.0.1,qt.gtimg.cn,web.ifzq.gtimg.cn,hq.sinajs.cn,money.finance.sina.com.cn,baostock.com,api.tushare.pro"
 
-echo ÕıÔÚÔ¤ÈÈ´óÅÌ¸´ÅÌ (A¹É + ÃÀ¹É), Ô¼Ğè 3-6 ·ÖÖÓ...
+echo æ­£åœ¨é¢„çƒ­å¤§ç›˜å¤ç›˜ (Aè‚¡ + ç¾è‚¡), çº¦éœ€ 3-6 åˆ†é’Ÿ...
 echo.
-"%~dp0dsa-env\Scripts\python.exe" Ô¤ÈÈ´óÅÌ.py %*
+"%~dp0dsa-env\Scripts\python.exe" é¢„çƒ­å¤§ç›˜.py %*
 
 echo.
 pause

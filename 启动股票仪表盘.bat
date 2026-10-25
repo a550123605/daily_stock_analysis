@@ -1,29 +1,36 @@
 @echo off
-chcp 65001 >nul
-title DSA Dashboard - http://127.0.0.1:8000
+chcp 936 >nul
+title ¹ÉÆ±·ÖÎöÒÇ±íÅÌ - http://127.0.0.1:8000
 cd /d "%~dp0daily_stock_analysis"
-
+if errorlevel 1 (
+    echo [´íÎó] ÎŞ·¨½øÈë daily_stock_analysis Ä¿Â¼
+    pause
+    exit /b 1
+)
 if not exist "%~dp0dsa-env\Scripts\python.exe" (
-    echo [ERROR] Python venv not found: %~dp0dsa-env
+    echo [´íÎó] Î´ÕÒµ½ĞéÄâ»·¾³: %~dp0dsa-env
+    echo ÇëÏÈÖ´ĞĞ: python -m venv dsa-env
     pause
     exit /b 1
 )
 
-rem ä»£ç†ï¼šAè‚¡èµ°ç›´è¿(è…¾è®¯)ï¼Œç¾è‚¡/ä¸œè´¢è¡¥æ•°æ®èµ°ä»£ç†ï¼›ä»£ç†æ²¡å¼€æ—¶Aè‚¡ç…§å¸¸ï¼Œç¾è‚¡ä¼šå¤±è´¥
-set HTTP_PROXY=http://127.0.0.1:15732
-set HTTPS_PROXY=http://127.0.0.1:15732
-set NO_PROXY=localhost,127.0.0.1,qt.gtimg.cn,web.ifzq.gtimg.cn,hq.sinajs.cn,money.finance.sina.com.cn,baostock.com,api.tushare.pro
+rem ´úÀí: A¹É×ßÖ±Á¬(ÌÚÑ¶), ÃÀ¹É×ß´úÀí; ´úÀíÃ»¿ªÊ±A¹ÉÕÕ³£, ÃÀ¹É»áÊ§°Ü
+set "HTTP_PROXY=http://127.0.0.1:15732"
+set "HTTPS_PROXY=http://127.0.0.1:15732"
+set "NO_PROXY=localhost,127.0.0.1,qt.gtimg.cn,web.ifzq.gtimg.cn,hq.sinajs.cn,money.finance.sina.com.cn,baostock.com,api.tushare.pro"
 
-start "" /min cmd /c "timeout /t 18 >nul & start http://127.0.0.1:8000"
+start "" /min cmd /c "timeout /t 15 >nul & start http://127.0.0.1:8000"
 
 echo ==================================================
-echo   Dashboard : http://127.0.0.1:8000
-echo   Stocks    : 10 Aè‚¡/ETF + KO BRK.B VOO QQQM  (.env STOCK_LIST)
-echo   Auto run  : æ¯ä¸ªäº¤æ˜“æ—¥ 18:00
-echo   Stop      : close this window or Ctrl+C
+echo   ÒÇ±íÅÌ : http://127.0.0.1:8000
+echo   ±êµÄ   : 10 Ö» A¹É/ETF + KO BRK.B VOO QQQM
+echo   ¶¨Ê±   : Ã¿¸ö½»Ò×ÈÕ 18:00 ×Ô¶¯·ÖÎö
+echo   Í£Ö¹   : ¹Ø±Õ±¾´°¿Ú »ò °´ Ctrl+C
 echo ==================================================
 echo.
 
 "%~dp0dsa-env\Scripts\python.exe" main.py --serve
 
+echo.
+echo ·şÎñÒÑÍË³ö¡£ÈôÊÇÒì³£ÍË³ö, Çë°ÑÉÏÃæµÄ±¨´í·¢³öÀ´¡£
 pause
